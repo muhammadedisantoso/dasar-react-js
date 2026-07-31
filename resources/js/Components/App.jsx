@@ -21,7 +21,7 @@ function App() {
                 textAlign: 'center'
             }}>
                 <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2563eb', marginBottom: '1rem' }}>
-                    Hello Laravel + React! 🚀
+                    Hello Laravel React! 🚀
                 </h1>
                 <p style={{ marginBottom: '1rem', color: '#4b5563' }}>
                     Jika Anda bisa membaca ini, React sudah berjalan!
