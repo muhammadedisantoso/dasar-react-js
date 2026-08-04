@@ -1,15 +1,26 @@
-import React, { useState,useMemo } from "react";
+import React, { useState,useMemo,useEffect } from "react";
 import { Plus, Pencil, Trash2, X, Package, Search } from "lucide-react";
 
 // ---------------------------------------------------------------------------
 // Data awal (contoh). Ganti dengan data dari API Laravel kamu, misal:
 // useEffect(() => { fetch('/api/products').then(r => r.json()).then(setProducts) }, [])
-// ---------------------------------------------------------------------------
-const initialProducts = [
+// -----------------------------------------------------------------
+const STORAGE_KEY = "produk-toko"
+
+const defaultProducts = [
   { id: 1, name: "sepatu", price: 450000, stock: 42 },
   { id: 2, name: "Kemeja Flanel Katun", price: 185000, stock: 67 },
   { id: 3, name: "celana jeans", price: 180000, stock: 56 },
 ];
+
+function loadProducts() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : defaultProducts;
+  } catch {
+    return defaultProducts
+  }
+}
 
 const formatRupiah = (n) =>
   new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(n);
@@ -17,7 +28,7 @@ const formatRupiah = (n) =>
 const emptyForm = { name: "", price: "", stock: "" };
 
 export default function ProductDashboardSimple() {
-  const [products, setProducts] = useState(initialProducts);
+  const [products, setProducts] = useState(loadProducts);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(emptyForm);
@@ -28,6 +39,10 @@ export default function ProductDashboardSimple() {
   if (!q) return products;
   return products.filter((p) => p.name.toLowerCase().includes(q));
 }, [products, query]);
+
+useEffect (() => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(products))
+}, [products]);
 
   function openAdd() {
     setEditingId(null);
