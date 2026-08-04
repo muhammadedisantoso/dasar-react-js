@@ -1,4 +1,4 @@
-import productdasboard from './components/productdasboard'
+import ProductDashboardSimple from "./ProductDashboardSimple";
 export default function App() {
-    return <productdasboard/>;
+    return <ProductDashboardSimple/>;
 }
