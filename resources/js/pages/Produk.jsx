@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Search, ChevronRight } from "lucide-react";
+import { Plus, Search, ChevronRight, Pencil, Trash2, X } from "lucide-react";
 
 const STORAGE_KEY = "produk-toko";
 
@@ -25,10 +25,48 @@ const formatRupiah = (n) =>
 export default function Produk() {
   const [products, setProducts] = useState(loadProducts);
   const [query, setQuery] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [form, setForm] = useState({name:"",price:"",stock:""});
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
   }, [products]);
+
+  function openAdd () {
+    setEditingId(null);
+    setForm ({name:"", price:"", stock:""});
+    setModalOpen(true);
+  }
+
+function openEdit(p){
+  setEditingId(p.id);
+  setForm ({ name: p.name, price: String(p.price), stock:String(p.stock)});
+  setModalOpen(true);
+}
+
+function handleSubmit(e) {
+  e.preventDefault();
+  if (!form.name.trim()) return;
+  const payload = { name: form.name.trim(), price: Number(form.price) || 0, stock: Number(form.stock) || 0 
+  };
+
+ 
+   if (editingId) {
+    setProducts((prev) => prev.map((p) => (p.id === editingId ? { ...p, ...payload } : p)));
+  } else {
+    const newId = products.length ? Math.max(...products.map((p) => p.id)) + 1 : 1;
+    setProducts((prev) => [{ id: newId, ...payload }, ...prev]);
+  }
+  setModalOpen(false);
+}
+
+function handleDelete(id) {
+  if (confirm("Hapus produk ini?")) {
+    setProducts((prev) => prev.filter((p) => p.id !== id));
+  }
+}
+
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -40,7 +78,9 @@ export default function Produk() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-semibold text-slate-800">Produk</h1>
-        <button className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-3.5 py-2 rounded-lg">
+        <button 
+        onClick={openAdd}
+        className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-3.5 py-2 rounded-lg">
           <Plus className="w-4 h-4" />
           Tambah
         </button>
@@ -64,6 +104,7 @@ export default function Produk() {
               <th className="px-4 py-3 font-medium">Harga</th>
               <th className="px-4 py-3 font-medium">Stok</th>
               <th className="px-4 py-3 font-medium text-right">Detail</th>
+              <th className="px-4 py-3 font-medium text-right">aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -73,19 +114,99 @@ export default function Produk() {
                 <td className="px-4 py-3 text-slate-600">{formatRupiah(p.price)}</td>
                 <td className="px-4 py-3 text-slate-600">{p.stock}</td>
                 <td className="px-4 py-3 text-right">
-                  <Link
-                    to={`/dashboard/produk/${p.id}`}
-                    className="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-800 text-xs font-medium"
-                  >
-                    Lihat
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </Link>
-                </td>
+  <Link to={`/dashboard/produk/${p.id}`} className="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-800 text-xs font-medium">
+    Lihat
+    <ChevronRight className="w-3.5 h-3.5" />
+  </Link>
+</td>
+<td className="px-4 py-3">
+  <div className="flex items-center justify-end gap-1">
+    <button
+      onClick={() => openEdit(p)}
+      className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 hover:text-indigo-600"
+      aria-label="Edit"
+    >
+      <Pencil className="w-4 h-4" />
+    </button>
+    <button
+      onClick={() => handleDelete(p.id)}
+      className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 hover:text-rose-600"
+      aria-label="Hapus"
+    >
+      <Trash2 className="w-4 h-4" />
+    </button>
+  </div>
+</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      {modalOpen && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
+    <div className="bg-white rounded-xl w-full max-w-sm shadow-xl p-5">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-semibold text-slate-800">{editingId ? "Edit Produk" : "Tambah Produk"}</h2>
+        <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div>
+          <label className="block text-xs font-medium text-slate-500 mb-1">Nama Produk</label>
+          <input
+            required
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            placeholder="Contoh: Wireless Earbuds Pro"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1">Harga</label>
+            <input
+              required
+              type="number"
+              min="0"
+              value={form.price}
+              onChange={(e) => setForm({ ...form, price: e.target.value })}
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
+              placeholder="0"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1">Stok</label>
+            <input
+              required
+              type="number"
+              min="0"
+              value={form.stock}
+              onChange={(e) => setForm({ ...form, stock: e.target.value })}
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
+              placeholder="0"
+            />
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 pt-2">
+          <button
+            type="button"
+            onClick={() => setModalOpen(false)}
+            className="px-3.5 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100"
+          >
+            Batal
+          </button>
+          <button
+            type="submit"
+            className="px-3.5 py-2 rounded-lg text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white"
+          >
+            Simpan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
     </div>
   );
 }
