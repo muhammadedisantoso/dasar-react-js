@@ -1,12 +1,13 @@
-import react, {createContext,useContext,useState} from "react";
+import { createContext, useContext, useState } from "react";
 
 const AuthContext = createContext(null);
-
-const ADMIN_USERNAME = "admin";
-const ADMIN_PASSWORD = "admin";
 const STORAGE_KEY = "auth-user";
 
-export function AuthProvider({ children}) {
+// kredensial dummy, HANYA untuk latihan frontend
+const DUMMY_USERNAME = "admin";
+const DUMMY_PASSWORD = "admin";
+
+export function AuthProvider({ children }) {
     const [user, setUser] = useState(() => {
         try {
             const saved = localStorage.getItem(STORAGE_KEY);
@@ -15,28 +16,42 @@ export function AuthProvider({ children}) {
             return null;
         }
     });
+    const [isLoading, setIsLoading] = useState(false);
 
-    function login(username, password) {
-  if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-    const userData = { username };                      // dideklarasikan di sini
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(userData)); // dipakai di sini
-    setUser(userData);                                    // dan di sini
-    return true;
-  }
-  return false;
-}
-    function logout(){
+    async function login(username, password) {
+        setIsLoading(true);
+        try {
+            // simulasi delay network, biar loading state kelihatan efeknya
+            await new Promise((resolve) => setTimeout(resolve, 600));
+
+            if (username === DUMMY_USERNAME && password === DUMMY_PASSWORD) {
+                const userData = { username };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+                setUser(userData);
+            } else {
+                throw new Error("Username atau password salah");
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    function logout() {
         localStorage.removeItem(STORAGE_KEY);
         setUser(null);
     }
+
     return (
-        <AuthContext.Provider value={{user , isAuthenticated: !!user , login , logout}}>
+        <AuthContext.Provider
+            value={{ user, isAuthenticated: !!user, isLoading, login, logout }}
+        >
             {children}
         </AuthContext.Provider>
     );
-
 }
 
 export function useAuth() {
-    return useContext(AuthContext);
+    const ctx = useContext(AuthContext);
+    if (!ctx) throw new Error("useAuth harus dipakai di dalam <AuthProvider>");
+    return ctx;
 }
