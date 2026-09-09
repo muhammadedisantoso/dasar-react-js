@@ -1,27 +1,13 @@
-import React, { useState, useEffect } from "react";
+// SESUDAH
+import React from "react";
 import { Package, ShoppingCart, TrendingUp } from "lucide-react";
-
-const STORAGE_KEY = "produk-toko";
-
-function loadProducts() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : [];
-  } catch {
-    return [];
-  }
-}
+import { useProducts } from "../hooks/useProducts";
 
 const formatRupiah = (n) =>
   new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(n);
 
 export default function Dashboard() {
-  const [products, setProducts] = useState([]);
-
-  // Baca ulang data setiap kali halaman Dashboard dibuka
-  useEffect(() => {
-    setProducts(loadProducts());
-  }, []);
+ const { products } = useProducts();
 
   const totalProduk = products.length;
   const totalNilai = products.reduce((sum, p) => sum + p.price * p.stock, 0);
